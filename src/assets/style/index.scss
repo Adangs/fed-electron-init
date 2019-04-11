@@ -1,0 +1,59 @@
+@import "../iconfont/iconfont.css";
+@import "./mixin.scss";
+@import "./reset.scss";
+html, body, #app{ height: 100%;}
+
+.g-layout-all{
+  @include flexVertical(); height: 100%;
+  .g-layout-header{
+    @include flexCenter(); background: #2c3342; height: 60px; color: #fff;
+    .m-logo{
+      height: 50px; line-height: 50px; text-align: center; padding: 0 8px 0 10px; overflow: hidden; position: relative; margin-right: 10px;
+      &:after{ content: ''; position: absolute; width: 10px; height: 3px; background-color: #fff; right: 0; bottom: 15px;}
+      .ok{ font-size: 60px;}
+    }
+    h1{ font-size: 17px;}
+  }
+
+  .g-layout-content{
+    flex: 1; display: flex; overflow: hidden;
+    .g-layout-aside{ width: 100px; background-color: #eee;}
+    .g-layout-main{ flex: 1;}
+  }
+}
+
+// 子标题
+.g-title{
+  @include flexCenter(); font-size: 14px; padding: 10px; border-bottom: 1px solid #dcdcdc; color: #333;
+  .ok{ margin-right: 5px; }
+}
+
+// 统一表单样式
+.m-form{
+  &.inline{
+    padding: 18px 10px 0; border-bottom: 1px solid #dcdcdc;
+  }
+}
+
+.m-content-all{
+  padding: 10px; height: 100%;
+  dl{ padding-bottom: 20px;}
+  dt{ font-size: 14px; font-weight: bold;}
+  button{ padding: 3px 5px;}
+}
+
+.m-tools{
+  @include flexVertical(); height: 100%;
+  .list{
+    flex: 1; padding: 10px; overflow: auto; height: 100%;
+    ul{ overflow: hidden;}
+    li{
+      float: left; width: 20%; padding: 3px;
+      em{ flex: 1;}
+      p{
+        background-color: #f8f8f8; @include flexCenter(); padding: 3px;
+        &:hover{ background-color: #f1f1f1;}
+      }
+    }
+  }
+}

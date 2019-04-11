@@ -1,0 +1,13 @@
+@mixin flexCenter{
+  display: flex; box-align: center; align-items: center;
+}
+
+@mixin flexVertical{
+  display: flex; box-orient: vertical; flex-direction: column;
+}
+
+@mixin keyframes($animationName) {
+  @keyframes #{$animationName} {
+    @content;
+  }
+}
