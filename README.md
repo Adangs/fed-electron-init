@@ -26,17 +26,24 @@ yarn electron:build
 ```
 
 ## 新建一个项目步骤
-- 1、使用 Vue CLI3 初始化一个vue项目
-- 2、在当前vue项目中添加依赖`yarn add -dev vue-cli-plugin-electron-builder`
-- 3、初始化electron-builder`vue add electron-builder`
-- 4、添加依赖`yarn add --dev electron-icon-builder`
-- 5、添加客户端图标原始图标`public/icon.png`
-- 6、`package.json`添加脚本
+1、使用 Vue CLI3 初始化一个vue项目
+
+2、在当前vue项目中添加依赖`yarn add -dev vue-cli-plugin-electron-builder`
+
+3、初始化electron-builder`vue add electron-builder`
+
+4、添加依赖`yarn add --dev electron-icon-builder`
+
+5、添加客户端图标原始图标`public/icon.png`
+
+6、`package.json`添加脚本
 ```json
 "electron:generate-icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten"
 ```
-- 7、生成客户端图标各个尺寸图标`yarn electron:generate-icons`
-- 8、在`src/background.(js|ts)`中引入图标
+
+7、生成客户端图标各个尺寸图标`yarn electron:generate-icons`
+
+8、在`src/background.(js|ts)`中引入图标
 ```js
 // Import path module (at the top of your file, below 'use-strict')
 import path from 'path'
@@ -51,11 +58,13 @@ win = new BrowserWindow({
 })
 // 参考 https://nklayman.github.io/vue-cli-plugin-electron-builder/guide/recipes.html#icons
 ```
-- 9、Dev 
+
+9、Dev 
 ```
 yarn electron:serve
 ```
-- 10、Build （会根据当前开发环境系统生成对应的应用安装包）
+
+10、Build （会根据当前开发环境系统生成对应的应用安装包）
 ```
 yarn electron:build
 ```
