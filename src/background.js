@@ -21,6 +21,8 @@ function createWindow () {
     width: winW,
     height: winH,
     title: '矿工助手',
+    // 是否显示边框
+    // frame: false,
     // 客户端图标
     icon: path.join(__static, 'icon.png')
   })
