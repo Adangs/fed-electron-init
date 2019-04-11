@@ -69,6 +69,8 @@ yarn electron:serve
 yarn electron:build
 ```
 
+<img width='100%' src='https://raw.githubusercontent.com/Adangs/fed-electron-init/master/src/assets/images/demo-png.png'>
+
 ## 参考文档
 - electron-vue：https://simulatedgreg.gitbooks.io/electron-vue/cn/
 - Vue CLI Plugin Electron Builder： https://nklayman.github.io/vue-cli-plugin-electron-builder/guide/
