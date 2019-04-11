@@ -1,5 +1,5 @@
 # fed-electron-init
-使用electron + electron-vue + 初始化一个简单的桌面客户端应用
+使用electron + electron-vue 初始化一个简单的桌面客户端应用
 
 # 简单步骤
 
