@@ -1,8 +1,6 @@
 # fed-electron-init
 使用electron + electron-vue 初始化一个简单的桌面客户端应用
 
-# 简单步骤
-
 ## 安装全局依赖
 ```
 npm install -g yarn
@@ -15,8 +13,16 @@ yarn config set disturl https://npm.taobao.org/dist --global
 yarn global add @vue/cli
 yarn global add electron@latest
 ```
+## 运行当前项目
+```
+yarn
 
-## 其他
+yarn electron:serve
+
+yarn electron:build
+```
+
+## 新建一个项目步骤
 - 1、使用 Vue CLI3 初始化一个vue项目
 - 2、在当前vue项目中添加依赖`yarn add -dev vue-cli-plugin-electron-builder`
 - 3、初始化electron-builder`vue add electron-builder`
