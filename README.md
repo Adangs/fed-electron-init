@@ -1,5 +1,5 @@
 # fed-electron-init
-使用electron + electron-vue + vue cli3 初始化一个简单的桌面客户端应用
+使用electron + electron-vue + vue cli3 + electron-builder 初始化一个简单的桌面客户端应用
 
 使用`request`批量模拟局域网内的矿机登录管理后台并且执行相关操作
 
