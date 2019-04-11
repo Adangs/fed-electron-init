@@ -1,6 +1,9 @@
 # fed-electron-init
 使用electron + electron-vue 初始化一个简单的桌面客户端应用
 
+使用`request`批量模拟局域网内的矿机登录管理后台并且执行相关操作
+
+
 ## 安装全局依赖
 ```
 npm install -g yarn
