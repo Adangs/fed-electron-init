@@ -91,8 +91,9 @@ window版本中支持版本检测升级功能；使用`vue cli3 与 vue-cli-plug
 ```
 
 ## 客户端下载
-> [<h4>Window x64 版下载</h4>](https://okminer-static.oss-cn-hangzhou.aliyuncs.com/download/helper/%E7%9F%BF%E5%B7%A5%E5%8A%A9%E6%89%8B%20Setup%201.1.0.exe)
-> [<h4>Mac dmg 版下载</h4>](https://okminer-static.oss-cn-hangzhou.aliyuncs.com/download/helper/%E7%9F%BF%E5%B7%A5%E5%8A%A9%E6%89%8B-1.1.0.dmg)
+> [Window x64 版下载](https://okminer-static.oss-cn-hangzhou.aliyuncs.com/download/helper/%E7%9F%BF%E5%B7%A5%E5%8A%A9%E6%89%8B%20Setup%201.1.0.exe)
+
+> [MAC dmg](https://okminer-static.oss-cn-hangzhou.aliyuncs.com/download/helper/%E7%9F%BF%E5%B7%A5%E5%8A%A9%E6%89%8B-1.1.0.dmg)
 
 <img width='100%' src='https://raw.githubusercontent.com/Adangs/fed-electron-init/master/src/assets/images/demo-png.png'>
 
