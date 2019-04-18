@@ -5,6 +5,12 @@
     <!--主要内容-->
     <div class="m-form inline">
       <el-form ref="form" :inline="true" :model="formData" :rules="rules">
+        <el-form-item label="用户名" prop="user">
+          <el-input v-model="formData.user" placeholder="请输入用户名" @keypress.enter.native="initList"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="formData.password" placeholder="请输入密码" @keypress.enter.native="initList"></el-input>
+        </el-form-item>
         <el-form-item label="起始IP" prop="start">
           <el-input v-model="formData.start" placeholder="请输入起始IP" @keypress.enter.native="initList"></el-input>
         </el-form-item>
@@ -40,7 +46,7 @@ const request = require('request').defaults({ jar: true })
 const cheerio = require('cheerio')
 
 export default {
-  name: 'index',
+  name: 'Home',
   components: {
     XTitle
   },
@@ -48,6 +54,8 @@ export default {
   data () {
     return {
       formData: {
+        user: 'root',
+        password: null,
         start: null,
         end: null
       },
@@ -57,16 +65,25 @@ export default {
       status: {
         success: '成功',
         danger: '失败',
-        info: '未执行'
+        info: '未执行',
+        progress: '进行中'
       },
       rules: {
+        user: [
+          { required: true, trigger: 'blur', message: '请输入用户名' }
+        ],
+        password: [
+          { required: true, trigger: 'blur', message: '请输入密码' }
+        ],
         start: [
           { required: true, pattern: pattern, trigger: 'blur', message: '请输入正确的IP地址' }
         ],
         end: [
           { required: true, pattern: pattern, trigger: 'blur', message: '请输入正确的IP地址' }
         ]
-      }
+      },
+      body: {},
+      store: {}
     }
   },
   computed: {
@@ -78,6 +95,10 @@ export default {
   watch: {},
   created () {
 
+  },
+  mounted () {
+    // 主动进行检查是否有新版本，不能成功，找时间再排查问题
+    // ipcRenderer.send('send-checking-for-update')
   },
   methods: {
     // 初始化列表
@@ -113,12 +134,15 @@ export default {
     // 批量执行
     async execute () {
       this.isStatus = false
-      const body = this.list[this.index]
+      this.body = this.list[this.index]
+      this.store = {}
+      // 更改为进行中状态
+      this.list[this.index].status = 'progress'
       // ip是否存在
       const isIp = await new Promise((resolve, reject) => {
         request({
           method: 'GET',
-          url: `http://${body.name}/cgi-bin/luci/`,
+          url: `http://${this.body.name}/cgi-bin/luci/`,
           timeout: 1000
         }, (error) => {
           if (error) {
@@ -133,14 +157,13 @@ export default {
       }
       // 基础参数
       const options = {
-        url: `http://${body.name}/cgi-bin/luci/`,
+        url: `http://${this.body.name}/cgi-bin/luci/`,
         timeout: 2000,
         form: {
-          luci_username: 'root',
-          luci_password: 'abcde54321'
+          luci_username: this.formData.user,
+          luci_password: this.formData.password
         }
       }
-      const store = {}
       // 登录成功后，获取cookie
       const cookie = await new Promise((resolve, reject) => {
         request(options, (error, res, body) => {
@@ -157,14 +180,15 @@ export default {
         return this.next({ success: false, msg: '获取cookie失败' })
       } else {
         // 格式化cookie
-        store.cookie = cookie.split('=')[1]
-        console.log('执行[login]成功~', store.cookie)
+        this.store.cookie = cookie.split('=')[1]
+        console.log('执行[login]成功~', this.store.cookie)
       }
       // 获取token
+      let isDropbear
       const token = await new Promise((resolve, reject) => {
         request({
           method: 'GET',
-          url: `http://${body.name}/cgi-bin/luci/admin/status/processes`,
+          url: `http://${this.body.name}/cgi-bin/luci/admin/status/processes`,
           headers: { Cookie: cookie }
         }, (error, res, html) => {
           if (error) {
@@ -172,32 +196,154 @@ export default {
             return resolve(false)
           } else {
             // 查找是否已经启动dropbear 服务
-            if (html.indexOf('dropbear') !== -1) {
-              return resolve(false)
-            } else {
-              // 格式化body内容，通过jq方式查找页面元素内容
-              // https://github.com/cheeriojs/cheerio
-              const $ = cheerio.load(html)
-              const token = $('input[name="token"]').val()
-              return resolve(token)
-            }
+            isDropbear = html.indexOf('dropbear') !== -1
+            // 格式化body内容，通过jq方式查找页面元素内容
+            // https://github.com/cheeriojs/cheerio
+            const $ = cheerio.load(html)
+            const token = $('input[name="token"]').val()
+            return resolve(token)
           }
         })
       })
       // 校验token
       if (token) {
-        store.token = token
+        this.store.token = token
       } else {
         console.error('服务已经存在')
         return this.next({ success: false, msg: '服务已经存在' })
       }
+      // 服务是否已存在
+      if (isDropbear) {
+        console.log('服务存在，进行删除')
+        // 服务已经存在，那么进行删除服务操作，保证每台矿机都执行okkong想着的操作
+        const remove = await this.removeDropbear()
+        if (remove !== 200) {
+          console.error('remove Error!')
+          return this.next({ success: false, msg: '删除服务失败!' })
+        }
+        // apply_rollback
+        const confirm = await this.setConfirm()
+        // confirm 失败
+        if (confirm !== 200) {
+          console.error('confirm Error!')
+          return this.next({ success: false, msg: 'confirm Error!' })
+        } else {
+          console.info('执行[Dropbear Instance]成功~')
+        }
+      }
+
+      // 添加服务
+      const save = await this.addDropbear()
+      // 提交失败
+      if (save !== 200) {
+        console.error('Save Apply Error!')
+        return this.next({ success: false, msg: 'Save Apply Error!' })
+      }
+      // apply_rollback
+      const confirm = await this.setConfirm()
+      // confirm 失败
+      if (confirm !== 200) {
+        console.error('confirm Error!')
+        return this.next({ success: false, msg: 'confirm Error!' })
+      } else {
+        console.info('执行[Dropbear Instance]成功~')
+      }
+      // 添加 startup
+      const startup = await this.setStartup()
+      if (startup !== 200) {
+        return this.next({ success: false, msg: 'startup Error!' })
+      } else {
+        console.info('执行[Local Startup]成功~')
+      }
+      // Reboot
+      const reboot = await this.setReboot()
+      if (reboot !== 200) {
+        return this.next({ success: false, msg: 'Reboot Error!' })
+      } else {
+        console.info('执行[Reboot]成功~')
+      }
+      console.log(`[ip ${this.body.ip}]执行成功~`)
+      this.next({ success: true, msg: '执行成功~' })
+    },
+    // 删除服务
+    async removeDropbear () {
+      const keyList = await new Promise((resolve, reject) => {
+        request({
+          method: 'GET',
+          url: `http://${this.body.name}/cgi-bin/luci/admin/system/admin`
+        }, (error, res, html) => {
+          if (error) {
+            return resolve(false)
+          } else {
+            // 格式化body内容，通过jq方式查找页面元素内容
+            // https://github.com/cheeriojs/cheerio
+            const list = []
+            const $ = cheerio.load(html)
+            const section = $('.cbi-section-remove input')
+            section.each((index, item) => {
+              const key = $(item).attr('name')
+              const name = key.split('.')
+              list.push(name[name.length - 1])
+            })
+            return resolve(list)
+          }
+        })
+      })
+      console.log('已存在的key list', keyList)
+      for (let i = 0; i < keyList.length; i++) {
+        await new Promise((resolve, reject) => {
+          request({
+            method: 'POST',
+            url: `http://${this.body.name}/cgi-bin/luci/admin/system/admin`,
+            form: {
+              'token': this.store.token,
+              'cbi.submit': 1,
+              [`cbi.rts.dropbear.${keyList[i]}`]: 'Delete',
+              [`cbid.dropbear.${keyList[i]}.Port`]: 22,
+              [`cbi.cbe.dropbear.${keyList[i]}.PasswordAuth`]: 1,
+              [`cbid.dropbear.${keyList[i]}.PasswordAuth`]: 'on',
+              [`cbi.cbe.dropbear.${keyList[i]}.RootPasswordAuth`]: 1,
+              [`cbid.dropbear.${keyList[i]}.RootPasswordAuth`]: 'on',
+              [`cbi.cbe.dropbear.${keyList[i]}.GatewayPorts`]: 1
+            }
+          }, (error, res) => {
+            if (error) {
+              return resolve(false)
+            } else {
+              console.log(keyList[i], res.statusCode)
+              return resolve(res.statusCode)
+            }
+          })
+        })
+      }
+      console.log('删除完成后进行保存')
+      return await new Promise((resolve, reject) => {
+        request({
+          method: 'POST',
+          url: `http://${this.body.name}/cgi-bin/luci/admin/system/admin`,
+          form: {
+            'token': this.store.token,
+            'cbi.submit': 1,
+            'cbi.apply': 'Save & Apply'
+          }
+        }, (error, res) => {
+          if (error) {
+            return resolve(false)
+          } else {
+            return resolve(res.statusCode)
+          }
+        })
+      })
+    },
+    // 添加服务
+    async addDropbear () {
       // 添加 Dropbear
       const addKey = await new Promise((resolve, reject) => {
         request({
           method: 'POST',
-          url: `http://${body.name}/cgi-bin/luci/admin/system/admin`,
+          url: `http://${this.body.name}/cgi-bin/luci/admin/system/admin`,
           form: {
-            'token': store.token,
+            'token': this.store.token,
             'cbi.submit': 1,
             'cbi.cts.dropbear.dropbear.': 'Add'
           }
@@ -220,9 +366,9 @@ export default {
       const save = await new Promise((resolve, reject) => {
         request({
           method: 'POST',
-          url: `http://${body.name}/cgi-bin/luci/admin/system/admin`,
+          url: `http://${this.body.name}/cgi-bin/luci/admin/system/admin`,
           form: {
-            'token': store.token,
+            'token': this.store.token,
             'cbi.submit': 1,
             [`cbid.dropbear.${addKey}.Port`]: 22,
             [`cbi.cbe.dropbear.${addKey}.PasswordAuth`]: 1,
@@ -241,19 +387,17 @@ export default {
         })
       })
       console.log('Save & Apply', save)
-      // 提交失败
-      if (save !== 200) {
-        console.error('Save Apply Error!')
-        return this.next({ success: false, msg: 'Save Apply Error!' })
-      }
-      // apply_rollback
+      return save
+    },
+    // 提交 confirm
+    async setConfirm () {
       const apply = await new Promise((resolve, reject) => {
         request({
           method: 'POST',
-          url: `http://${body.name}/cgi-bin/luci/admin/uci/apply_rollback`,
+          url: `http://${this.body.name}/cgi-bin/luci/admin/uci/apply_rollback`,
           form: {
-            sid: store.cookie,
-            token: store.token
+            sid: this.store.cookie,
+            token: this.store.token
           }
         }, (error, res) => {
           if (error) {
@@ -266,16 +410,16 @@ export default {
       console.log('apply_rollback', apply)
       // apply_rollback 失败
       if (apply !== 200) {
-        return this.next({ success: false, msg: 'apply_rollback Error!' })
+        return false
       }
       // confirm
       const confirm = await new Promise((resolve, reject) => {
         request({
           method: 'POST',
-          url: `http://${body.name}/cgi-bin/luci/admin/uci/confirm`,
+          url: `http://${this.body.name}/cgi-bin/luci/admin/uci/confirm`,
           form: {
-            sid: store.cookie,
-            token: store.token
+            sid: this.store.cookie,
+            token: this.store.token
           }
         }, (error, res) => {
           if (error) {
@@ -286,20 +430,16 @@ export default {
         })
       })
       console.log('confirm', confirm)
-      // confirm 失败
-      if (confirm !== 200) {
-        console.error('confirm Error!')
-        return this.next({ success: false, msg: 'confirm Error!' })
-      } else {
-        console.info('执行[Dropbear Instance]成功~')
-      }
-      // 添加 startup
-      const startup = await new Promise((resolve, reject) => {
+      return confirm
+    },
+    // startup
+    async setStartup () {
+      return await new Promise((resolve, reject) => {
         request({
           method: 'POST',
-          url: `http://${body.name}/cgi-bin/luci/admin/system/startup`,
+          url: `http://${this.body.name}/cgi-bin/luci/admin/system/startup`,
           form: {
-            'token': store.token,
+            'token': this.store.token,
             'cbi.submit': 1,
             'cbid.rc.1.rcs': '# Put your custom commands here that should be executed once\n' +
               '# the system init finished. By default this file does nothing.\n' +
@@ -328,18 +468,15 @@ export default {
           }
         })
       })
-      if (startup !== 200) {
-        return this.next({ success: false, msg: 'startup Error!' })
-      } else {
-        console.info('执行[Local Startup]成功~')
-      }
-      // Reboot
-      const reboot = await new Promise((resolve, reject) => {
+    },
+    // Reboot
+    async setReboot () {
+      return await new Promise((resolve, reject) => {
         request({
           method: 'POST',
-          url: `http://${body.name}/cgi-bin/luci//admin/system/reboot/call`,
+          url: `http://${this.body.name}/cgi-bin/luci//admin/system/reboot/call`,
           form: {
-            token: store.token
+            token: this.store.token
           }
         }, (error, res) => {
           if (error) {
@@ -349,13 +486,6 @@ export default {
           }
         })
       })
-      if (reboot !== 200) {
-        return this.next({ success: false, msg: 'Reboot Error!' })
-      } else {
-        console.info('执行[Reboot]成功~')
-      }
-      console.log(`[ip ${body.ip}]执行成功~`)
-      this.next({ success: true, msg: '执行成功~' })
     },
     // 执行下一个
     next (res) {

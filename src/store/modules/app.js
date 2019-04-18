@@ -42,6 +42,11 @@ export default {
     loading: false,
     addRoutes: null,
     routes: null,
+    progress: {
+      percentage: 0, // 进度 10%
+      size: 0, // 当前大小
+      maxSize: 0 // 总大小
+    }, // 下载进度
     pending: {}
   },
   mutations: {
@@ -57,6 +62,9 @@ export default {
     SET_ROUTES: (state, routes) => {
       state.addRoutes = routes
       state.routes = staticRoutes.concat(routes)
+    },
+    SET_PROGRESS: (state, data) => {
+      state.progress = data
     }
   },
   actions: {
@@ -105,6 +113,13 @@ export default {
         }
         commit('SET_ROUTES', accessedRoutes)
         resolve(accessedRoutes)
+      })
+    },
+    // 设置下载进度
+    setProgress ({ commit, state }, data) {
+      return new Promise((resolve, reject) => {
+        commit('SET_PROGRESS', data)
+        resolve()
       })
     }
   }

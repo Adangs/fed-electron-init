@@ -11,6 +11,12 @@ export default [
     }]
   },
   {
+    path: '/update',
+    name: '下载更新',
+    component: () => import(/* webpackChunkName: "common" */ '~/views/update/index'),
+    meta: { title: '下载更新' }
+  },
+  {
     path: '/404',
     component: () => import(/* webpackChunkName: "common" */ '~/views/404/index')
   }

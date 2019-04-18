@@ -1,5 +1,5 @@
 # fed-electron-init
-使用electron + electron-vue + vue cli3 + electron-builder 初始化一个简单的桌面客户端应用
+使用electron + electron-vue + vue cli3 + vue-cli-plugin-electron-builder 初始化一个简单的桌面客户端应用
 
 使用`request`批量模拟局域网内的矿机登录管理后台并且执行相关操作
 
@@ -67,6 +67,27 @@ yarn electron:serve
 10、Build （会根据当前开发环境系统生成对应的应用安装包）
 ```
 yarn electron:build
+```
+
+## 版本更新检测
+window版本中支持版本检测升级功能；使用`vue cli3 与 vue-cli-plugin-electron-builder`需要在`vue.config.js`中配置以下内容才能生成对应的`latest.yml`文件；
+```$json
+  pluginOptions: {
+    electronBuilder: {
+      builderOptions: {
+        productName: 'APP NAME',
+        appId: 'APP ID',
+        copyright: 'Copyright',
+        publish: [
+          {
+            'provider': 'generic',
+            'url': 'https://**.***.com/download/'
+          }
+        ]
+      }
+    }
+  }
+  // builderOptions内对应cli2中在package.json的build内容
 ```
 
 <img width='100%' src='https://raw.githubusercontent.com/Adangs/fed-electron-init/master/src/assets/images/demo-png.png'>

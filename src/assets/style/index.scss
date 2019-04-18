@@ -6,13 +6,16 @@ html, body, #app{ height: 100%;}
 .g-layout-all{
   @include flexVertical(); height: 100%;
   .g-layout-header{
-    @include flexCenter(); background: #2c3342; height: 60px; color: #fff;
-    .m-logo{
-      height: 50px; line-height: 50px; text-align: center; padding: 0 8px 0 10px; overflow: hidden; position: relative; margin-right: 10px;
-      &:after{ content: ''; position: absolute; width: 10px; height: 3px; background-color: #fff; right: 0; bottom: 15px;}
-      .ok{ font-size: 60px;}
+    .header {
+      @include flexCenter(); background: #2c3342; height: 60px; color: #fff;
+      .m-logo{
+        height: 50px; line-height: 50px; text-align: center; padding: 0 8px 0 10px; overflow: hidden; position: relative; margin-right: 10px;
+        &:after{ content: ''; position: absolute; width: 10px; height: 3px; background-color: #fff; right: 0; bottom: 15px;}
+        .ok{ font-size: 60px;}
+      }
+      h1{ font-size: 17px;}
+      em{ font-size: 12px; padding: 0 5px; opacity: .5;}
     }
-    h1{ font-size: 17px;}
   }
 
   .g-layout-content{

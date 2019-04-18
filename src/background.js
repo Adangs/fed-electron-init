@@ -21,9 +21,7 @@ function createWindow () {
     width: winW,
     height: winH,
     title: '矿工助手',
-    // 是否显示边框
-    // frame: false,
-    // 客户端图标
+    titleBarStyle: 'hidden',
     icon: path.join(__static, 'icon.png')
   })
 
@@ -40,6 +38,8 @@ function createWindow () {
   win.on('closed', () => {
     win = null
   })
+
+  // console.log(autoUpdater)
 }
 
 // Quit when all windows are closed.

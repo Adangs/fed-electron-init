@@ -22,5 +22,6 @@ yarn-error.log*
 
 # FED
 package-lock.json
+yarn.lock
 #Electron-builder output
 /dist_electron
